@@ -2,9 +2,10 @@ package eu.kanade.tachiyomi.extension.th.nekopost
 
 import eu.kanade.tachiyomi.extension.th.nekopost.model.RawChapterInfo
 import eu.kanade.tachiyomi.extension.th.nekopost.model.RawProjectInfo
-import eu.kanade.tachiyomi.extension.th.nekopost.model.RawProjectNameListItem
+import eu.kanade.tachiyomi.extension.th.nekopost.model.RawProjectSearchSummary
 import eu.kanade.tachiyomi.extension.th.nekopost.model.RawProjectSummaryList
 import eu.kanade.tachiyomi.network.GET
+import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.asObservableSuccess
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
@@ -17,6 +18,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.Headers
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -32,6 +34,7 @@ class Nekopost : ParsedHttpSource() {
     private val latestMangaEndpoint: String = "https://api.osemocphoto.com/frontAPI/getLatestChapter/m"
     private val projectDataEndpoint: String = "https://api.osemocphoto.com/frontAPI/getProjectInfo"
     private val fileHost: String = "https://www.osemocphoto.com"
+    private val nekopostUrl = "https://www.nekopost.net"
 
     override val client: OkHttpClient = network.cloudflareClient
 
@@ -193,19 +196,19 @@ class Nekopost : ParsedHttpSource() {
     override fun searchMangaNextPageSelector(): String = throw UnsupportedOperationException("Not used.")
 
     override fun fetchSearchManga(page: Int, query: String, filters: FilterList): Observable<MangasPage> {
-        return client.newCall(GET("https://www.nekopost.net/api/project/latestChapter?t=c&p=0&s=12")).asObservableSuccess().map { response ->
-            val responseBody = response.body
-            val projectList: List<RawProjectNameListItem> = json.decodeFromString(responseBody.string())
+        val headers = Headers.headersOf("accept", "*/*", "content-type", "text/plain;charset=UTF-8", "origin", nekopostUrl)
+        val requestBody = "{\"keyword\":\"$query\"}".toRequestBody()
+        return client.newCall(POST("$nekopostUrl/api/explore/search", headers, requestBody)).asObservableSuccess().map { response ->
+            val responseBody = response.body.string()
+
+            val projectList: List<RawProjectSearchSummary> = json.decodeFromString(responseBody)
             val mangaList: List<SManga> = projectList.filter { project ->
-                Regex(
-                    query,
-                    setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE),
-                ).find(project.npName) != null
+                project.projectType == "m"
             }.map { project ->
                 SManga.create().apply {
-                    url = project.npProjectId
-                    title = project.npName
-                    status = getStatus(project.npStatus)
+                    url = project.projectId.toString()
+                    title = project.projectName
+                    status = project.status
                     initialized = false
                 }
             }
