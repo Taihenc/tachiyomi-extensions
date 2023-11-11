@@ -58,19 +58,9 @@ class Nekopost : HttpSource() {
 
     override fun latestUpdatesParse(response: Response): MangasPage = throw UnsupportedOperationException("Not used.")
 
-//    override fun chapterListSelector(): String = throw UnsupportedOperationException("Not used.")
-
-//    override fun chapterFromElement(element: Element): SChapter = throw UnsupportedOperationException("Not used.")
-
     override fun imageUrlParse(response: Response): String = throw UnsupportedOperationException("Not used.")
 
     override fun imageUrlRequest(page: Page): Request = throw UnsupportedOperationException("Not used.")
-
-//    override fun latestUpdatesFromElement(element: Element): SManga = throw UnsupportedOperationException("Not used.")
-
-//    override fun latestUpdatesNextPageSelector(): String = throw UnsupportedOperationException("Not used.")
-
-//    override fun latestUpdatesSelector(): String = throw UnsupportedOperationException("Not used.")
 
     override fun mangaDetailsRequest(manga: SManga): Request {
         return GET("$projectDataEndpoint/${manga.url}", headers)
@@ -180,16 +170,6 @@ class Nekopost : HttpSource() {
         return MangasPage(mangaList, hasNextPage = true)
     }
 
-//    override fun popularMangaFromElement(element: Element): SManga = throw UnsupportedOperationException("Not used.")
-
-//    override fun popularMangaNextPageSelector(): String = throw UnsupportedOperationException("Not used.")
-
-//    override fun popularMangaSelector(): String = throw UnsupportedOperationException("Not used.")
-
-//    override fun searchMangaFromElement(element: Element): SManga = throw UnsupportedOperationException("Not used.")
-
-//    override fun searchMangaNextPageSelector(): String = throw UnsupportedOperationException("Not used.")
-
     override fun searchMangaRequest(page: Int, query: String, filters: FilterList): Request {
         val headers = Headers.headersOf("accept", "*/*", "content-type", "text/plain;charset=UTF-8", "origin", nekopostUrl)
         val requestBody = "{\"keyword\":\"$query\"}".toRequestBody()
@@ -213,10 +193,4 @@ class Nekopost : HttpSource() {
 
         return MangasPage(mangaList, false)
     }
-
-//    override fun searchMangaRequest(page: Int, query: String, filters: FilterList): Request = throw UnsupportedOperationException("Not used.")
-
-//    override fun searchMangaParse(response: Response): MangasPage = throw UnsupportedOperationException("Not used.")
-
-//    override fun searchMangaSelector(): String = throw UnsupportedOperationException("Not used.")
 }
